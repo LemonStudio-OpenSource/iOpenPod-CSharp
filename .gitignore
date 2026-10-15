@@ -35,6 +35,14 @@ MANIFEST
 !/packaging/iOpenPod.spec
 !/packaging/update-helper.spec
 
+# ---------------------------------------------------------------------------
+# C# / WinUI 3 重制版（csharp/）需要跟踪的文件
+# 上面的 Python 忽略规则会误伤这些路径，这里显式取消忽略。
+# ---------------------------------------------------------------------------
+!csharp/build/
+!csharp/build/**
+!csharp/src/iOpenPod.WinUI/app.manifest
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt

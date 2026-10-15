@@ -1,0 +1,44 @@
+iOpenPod 管理器 —— 使用说明
+================================
+
+【这是什么】
+  一个在 Windows 上管理 iPod（iPod 1–5.5 代、classic、mini、nano 1–7 代）的桌面工具。
+  完全使用 C# 与 WinUI 3 重写，界面与日志全部为中文。
+
+【怎么运行】
+  1) 第一次使用，请先双击本目录下的：首次运行-安装运行时.cmd
+     （这一步会安装微软官方的 Windows App Runtime 1.8 组件，只需做一次，
+       不需要管理员权限。如果已经装过会自动跳过。）
+
+  2) 然后双击 iOpenPod.exe 启动。
+
+  重要：请把整个文件夹一起保留，不要只把 iOpenPod.exe 单独复制出去。
+
+【为什么必须先装运行时】
+  WinUI 3 应用除了自带 .NET 运行时之外，还需要操作系统级的
+  Windows App Runtime 组件来初始化图形合成器。
+  如果缺少它，窗口会出现、标题栏也正常，但客户区是一片空白，
+  而且不会弹任何错误提示——这很容易被误认为是程序坏了。
+  发行包里的 Runtime 目录已经包含微软官方的四个 .msix 组件。
+  如果一键脚本失败，可以手动依次双击安装：
+      Runtime\Microsoft.WindowsAppRuntime.1.8.msix
+      Runtime\Microsoft.WindowsAppRuntime.Main.1.8.msix
+      Runtime\Microsoft.WindowsAppRuntime.Singleton.1.8.msix
+      Runtime\Microsoft.WindowsAppRuntime.DDLM.1.8.msix
+
+【连接 iPod】
+  用 USB 连接 iPod，确认 Windows 能正常挂载它的磁盘（资源管理器里能看到盘符）。
+  然后在应用左侧选择「我的 iPod」→ 点击「重新扫描」→ 选中设备 → 点击「加载音乐库」。
+
+【出问题怎么看】
+  左侧「日志」页面会实时显示运行日志；也可以点「打开日志目录」，
+  日志文件位于：%LOCALAPPDATA%\iOpenPod\logs
+
+【已知限制】
+  · iPod nano 第 5/6/7 代使用 SQLite 音乐库，目前只能浏览、播放与备份，不能写入。
+  · 同步默认保持原格式，不做音频转码。
+  · iPod shuffle、iPod touch、iPhone 不在支持范围内。
+
+【授权】
+  GPL-3.0-or-later。HASHAB 签名算法移植自 dstaley/hashab（Unlicense，公有领域）。
+  iPod 与 iTunes 是 Apple Inc. 的商标，本软件与 Apple 无任何关联。
