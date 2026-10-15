@@ -1,294 +1,152 @@
-# iOpenPod: The Open-Source iPod Manager & iTunes Alternative for Windows, macOS, and Linux
+# iOpenPod 管理器 —— C# / WinUI 3 中文重制版
 
-**Your music. Your iPod.**
+**你的音乐，你的 iPod。**
 
-> **C# / WinUI 3 重制版（中文）**
-> 本仓库新增了 `csharp/` 目录：一个完全使用 C# 与 .NET 10 + WinUI 3 重写的实现，
-> 界面、日志与所有用户可见内容均为中文，构建产物是自带运行时的可执行程序。
-> 入口文档见 [`csharp/README.md`](csharp/README.md)。
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg?style=flat-square)](LICENSE)
+[![Platform: Windows x64](https://img.shields.io/badge/Platform-Windows%20x64-2ea44f.svg?style=flat-square)]()
+[![.NET 10](https://img.shields.io/badge/.NET-10-512BD4.svg?style=flat-square)]()
+[![WinUI 3](https://img.shields.io/badge/UI-WinUI%203-0078D4.svg?style=flat-square)]()
+[![语言：中文](https://img.shields.io/badge/%E7%95%8C%E9%9D%A2-%E4%B8%AD%E6%96%87-cf222e.svg?style=flat-square)]()
 
-[![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg?style=plastic)](LICENSE)
-[![Platform: Win | Mac | Linux](https://img.shields.io/badge/Platform-Win%20%7C%20Mac%20%7C%20Linux-2ea44f.svg?style=plastic)](#download-and-install)
-[![GitHub: Download latest](https://img.shields.io/badge/GitHub-Download%20latest-0a6fdb?style=plastic)](https://github.com/TheRealSavi/iOpenPod/releases/latest)
-[![GitHub Stars](https://img.shields.io/github/stars/TheRealSavi/iOpenPod?style=plastic\&color=6e5494)](https://github.com/TheRealSavi/iOpenPod/stargazers)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/iopenpod?style=plastic\&color=0a6fdb\&cacheSeconds=86400)](https://pypi.org/project/iopenpod/)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?style=plastic)](https://discord.gg/9Yy499Tf5d)
+[**⬇ 下载最新版**](https://github.com/LemonStudio-OpenSource/iOpenPod-CSharp/releases/latest) ·
+[使用说明](csharp/README.md) ·
+[原项目](https://github.com/TheRealSavi/iOpenPod)
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/johngibbons)
+![iOpenPod 管理器主界面](csharp/docs/screenshot-main.png)
 
-iOpenPod is a free, open-source iPod manager and iTunes alternative for
-**Windows, macOS, and Linux**. Browse your music, edit your library, and sync audio,
-video, photos, and podcasts from your computer. Built-in conversion prepares media
-for your iPod, and Sync Review lets you choose what gets added, updated, or removed.
-Built with Python and Qt6.
+---
 
-[Website](https://iopenpod.com) ·
-[Install help](https://iopenpod.com/install-help/) ·
-[Discord](https://discord.gg/9Yy499Tf5d) ·
-[Support development](https://ko-fi.com/johngibbons)
+## 这是什么
 
-![iOpenPod album library with album artwork and the selected album track list](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/album-library.webp)
+[TheRealSavi/iOpenPod](https://github.com/TheRealSavi/iOpenPod) 的**完全 C# 重写版**。
 
-## Download and install
+原项目由约 14 万行 Python + Qt6 构成；本仓库把它的核心能力用 **C# / .NET 10 / WinUI 3** 重新实现，
+**界面、日志、异常提示、设备型号名与所有用户可见内容全部为中文**，
+发行包自带 .NET 运行时，解压即用。
 
-<!-- markdownlint-disable MD033 -->
+| | 原版 | 本重制版 |
+| --- | --- | --- |
+| 语言 | Python 3.12 | C# 13 / .NET 10 |
+| 界面 | PySide6（Qt 6） | WinUI 3（Windows App SDK 1.8） |
+| 界面语言 | 多语言，默认英文 | **简体中文** |
+| 交付形式 | 需打包的 Python 发行版 | 自带运行时的单目录可执行程序 |
+| 平台 | Windows / macOS / Linux | Windows x64 |
 
-<a href="https://get.microsoft.com/installer/download/9p2lxchhwlg9?referrer=appbadge" target="_self" >
-    <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200"/>
-</a>
-<!-- markdownlint-enable MD033 -->
+## 快速开始
 
-Native downloads are available for all three platforms (Windows, MacOS, Linux) on the
-[latest release page](https://github.com/TheRealSavi/iOpenPod/releases/latest).
+1. 到 [Releases](https://github.com/LemonStudio-OpenSource/iOpenPod-CSharp/releases/latest) 下载 `iOpenPod-v3.0.0-win-x64.zip`，**完整解压**。
+2. 双击 `首次运行-安装运行时.cmd`（安装一次微软官方的 Windows App Runtime 1.8，不需要管理员权限）。
+3. 双击 `iOpenPod.exe`。
 
-Choose the asset for your platform from below.
+> 为什么必须先装运行时：WinUI 3 应用除了自带 .NET 之外，还需要操作系统级的
+> Windows App Runtime 才能初始化图形合成器。缺少它时窗口会出现、标题栏也正常，
+> 但客户区一片空白且不报任何错。发行包里的 `Runtime\` 目录已经附带微软官方的四个 MSIX 组件。
 
-you do not need Python to install these.
-See the [installation guide](https://iopenpod.com/install-help/) for setup and troubleshooting.
+## 功能
 
-| Platform              | Latest release assets                                                           | Installation                                                           |
-| --------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Windows x64           | [Windows x86\_64 ZIP](https://github.com/TheRealSavi/iOpenPod/releases/latest)  | Extract `iOpenPod.exe` and run it.                                     |
-| macOS · Apple Silicon | [macOS arm64 DMG](https://github.com/TheRealSavi/iOpenPod/releases/latest)      | Open the image and drag `iOpenPod.app` to Applications.                |
-| macOS · Intel         | [macOS x86\_64 DMG](https://github.com/TheRealSavi/iOpenPod/releases/latest)    | Open the image and drag `iOpenPod.app` to Applications.                |
-| Linux x64             | [Linux x86\_64 tar.gz](https://github.com/TheRealSavi/iOpenPod/releases/latest) | Extract the complete folder and run its top-level `iOpenPod` launcher. |
+* **浏览** —— 歌曲 / 专辑 / 艺术家 / 流派四种视图，封面缩略图、搜索、多字段排序、专辑详情页。
+* **播放** —— 底部播放条、播放队列、歌词面板。
+* **编辑** —— 曲目元数据编辑器（支持多选批量应用）、播放列表增删改、设备重命名。
+* **同步** —— 扫描宿主媒体文件夹，自动解析 ID3v1 / ID3v2.2-2.4、MP4、FLAC、Vorbis、WAV、AIFF、ASF
+  标签与内嵌封面，生成新增 / 更新 / 移除计划（移除项默认不勾选），在一个可恢复事务中提交。
+* **备份快照** —— 完整备份 `iPod_Control` 与 `Photos`，还原前强制再创建一次安全快照。
+* **安全写入** —— 暂存 → SHA-256 校验 → 写日志 → 发布 → 删除 → 校验 → 清理，全程可回滚。
+* **中文日志** —— 界面实时查看、筛选、复制，也可直接打开日志目录。
 
-On Windows, keep the file name as `iOpenPod.exe` and place it in a folder you can write to
-on a fixed NTFS drive for in-app updates. Windows users can also install through
-[Microsoft Store](https://apps.microsoft.com/detail/9P2LXCHHWLG9).
+### 支持范围
 
-On macOS, launch from Applications after copying the app and ejecting the DMG.
-The build targets macOS 12.3 or later. Current downloads are ad-hoc signed and not notarized; so you will have to allow the app to run in System Settings>Privacy and Secutiy. See the
-[Mac setup guide](https://iopenpod.com/install-help/#native-macos)
-which covers the first-launch prompts. Choose a DMG to install; the ZIPs labeled
-`sparkle-update` are reserved for the built-in updater and arent inteded for users.
+| 家族 | 支持世代 | 读写 |
+| --- | --- | --- |
+| iPod / iPod classic | 第 1–5.5 代、classic 6 / 6.5 / 7 代 | 完整读写 |
+| iPod mini | 第 1、2 代 | 完整读写 |
+| iPod nano | 第 1–4 代 | 完整读写 |
+| iPod nano | 第 5、6、7 代 | 只读 |
 
-On Linux, extract into a folder you can write to, preserve executable permissions,
-and keep the whole `iOpenPod` folder together. Always start its top-level launcher,
-including after an update. The binary is built on Ubuntu 24.04 and requires glibc
-2.39 or later plus desktop libraries.
+iPod shuffle、iPod touch、iPhone 不在支持范围内。
 
-Mac App Store, Flathub, and Snap Store remain planned. Check the
-[website](https://iopenpod.com/#install) for channel availability.
+## 技术要点
 
-### Updating a GitHub installation
+**无损数据库。** iTunesDB / ArtworkDB / PhotosDB 表示成一棵保留原始字节的数据块树，
+写入时只重算「长度」与「子块计数」两类结构字段 —— 解析后立即写回可以**逐字节重现**原始文件，
+未知字段、填充、保留区与尾部数据都不会丢失。校验程序用真实捕获的数据库证明了这一点。
 
-iOpenPod checks for updates at launch. You can also use **Settings → About →
-Check for updates**. About shows your current version and Install Channel.
+**三类签名全部支持。**
 
-* **Windows and Linux:** choose **Update now** to download the update, then
-  **Restart to install** when ready. Save any Library Draft and finish running
-  workflows first. Close other iOpenPod instances before restarting.
+| 方案 | 使用机型 | 实现 |
+| --- | --- | --- |
+| HASH58 | classic 6/7、nano 3/4 | AES S 盒由有限域定义现算，HMAC-SHA1 密钥由 FireWire GUID 派生 |
+| HASH72 | nano 5 | AES-128-CBC 信封；IV 与随机数从设备 `HashInfo` 或已签名数据库恢复 |
+| HASHAB | nano 6/7 | 从 [dstaley/hashab](https://github.com/dstaley/hashab) 的公有领域 C 实现移植，含 EDON-R′ 256 与 Apple 密码表 |
 
-* **macOS:** choose **Update now** after saving your work, then follow the built-in
-  updater's installation and relaunch prompts.
+**架构边界清晰。** 依赖方向严格单向，格式知识只存在一处：
 
-Installation requires your choice. If an older build only offers **Open download
-page**, or cannot update itself, install the latest download from above manually.
-Older Linux directory bundles should be replaced by extracting the new archive
-into a fresh folder.
-Microsoft Store installations update through the Store.
-
-### Install from PyPI with uv
-
-First [install uv](https://docs.astral.sh/uv/getting-started/installation/),
-then run:
-
-```shell
-uv tool install iopenpod
+```
+iOpenPod.WinUI  →  iOpenPod.App  →  iOpenPod.IPodDb  →  iOpenPod.DeviceRegistry
+                        ↓                                      ↑
+                   iOpenPod.Storage  ──────────────────────────┘
 ```
 
-Launch the app with `iopenpod`. For updates, choose **Update now**, then
-**Restart to install** in the app. Or manually run
+| 工程 | 职责 |
+| --- | --- |
+| `iOpenPod.Storage` | 卷发现、身份绑定的文件系统会话、可恢复写入事务、原生安全弹出 |
+| `iOpenPod.DeviceRegistry` | 151 个型号目录、SysInfo 解析、基于证据的识别（不触碰硬件） |
+| `iOpenPod.IPodDb` | 无损数据块树、iTunesDB / ArtworkDB / PhotosDB、签名、iTHMB 编解码 |
+| `iOpenPod.App` | 设备协调、音乐库会话、同步引擎、备份、播放、设置、中文日志 |
+| `iOpenPod.WinUI` | WinUI 3 中文界面 |
+
+## 从源码构建
+
+需要 **.NET 10 SDK** 与 Windows 10 1809 以上。
 
 ```shell
-uv tool upgrade iopenpod
+git clone https://github.com/LemonStudio-OpenSource/iOpenPod-CSharp.git
+cd iOpenPod-CSharp/csharp
+dotnet build iOpenPod.sln -c Release -p:Platform=x64
 ```
 
-### Media tools
+生成发行包（自动附带运行时的官方 MSIX 组件与一键安装脚本）：
 
-**FFmpeg and FFprobe** are installed separately for media conversion and inspection.
-**Chromaprint's fpcalc** is also installed seperately and enables acoustic matching during Sync.
+```powershell
+powershell -ExecutionPolicy Bypass -File build/publish.ps1
+```
 
-The startup popup or **Settings → Media Tools → Set Up Media Tools** can install
-missing tools after you choose **Install Missing Tools**. Native setup uses WinGet,
-Homebrew, or a supported Linux package manager.
-
-## What you can do
-
-* **Albums, artists, genres, and tracks.** Browse artwork, search your collection,
-  and edit metadata and ratings.
-
-* **Playlists and Smart Playlists.** Arrange tracks, organize playlist folders,
-  and create rule-based selections.
-
-* **Automatic media conversion.** Convert audio and video when needed and prepare
-  artwork for your iPod model. Choose how incoming media is encoded in Settings.
-
-* **Playback and Synesthesia.** Listen to supported tracks with desktop media
-  controls and explore music-reactive visuals.
-
-* **Photos.** Browse Photo Albums, inspect device-sized images, and export retained
-  originals and supported image representations.
-
-* **Podcasts.** Find shows, manage subscriptions, and refresh feeds and artwork.
-  Online discovery requires an internet connection.
-
-* **Scrobbling.** Optionally submit iPod music plays to Last.fm and ListenBrainz.
-
-* **Backup Snapshots.** Capture, browse, annotate, export, and restore local backups.
-  Interrupted writes expose explicit recovery actions.
-
-* **Appearance and conversion settings.** Choose light, dark, or system appearance
-  and configure how incoming media is prepared.
-
-Library edits save automatically by default. Enable **Draft all changes** to review
-and save those edits together. Sync always has its own selection and review flow.
-
-| Track metadata                                                                                                                                                                                | Track artwork                                                                                                                                                                             |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Edit Track dialog with title, artist, album, genre, composer, and track metadata](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/track-metadata.webp) | ![Edit Track artwork tab with cover art and controls to choose or clear artwork](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/track-artwork.webp) |
-
-| Smart Playlists                                                                                                                                                              | Backup Snapshots                                                                                                                                                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Smart Playlist editor with rules for music released before 2000](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/smart-playlist.webp) | ![Backups page with saved Backup Snapshots and restore actions for the selected iPod](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/backups.webp) |
-
-![Audio transcoding settings for encoder, bitrate, lossless conversion, and spoken-word media](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/audio-transcoding-settings.webp)
-
-## How to use
-
-1. **Connect your iPod** and select it in the device picker. Your operating system
-   must be able to mount and access it. Browse your library, play tracks, or edit
-   metadata and playlists.
-2. **Capture a Backup Snapshot** of the data you want to preserve.
-3. **Choose Sync with Host**, add media folders, and select what to scan.
-4. **Select your media**, then review additions, updates, and removals. Removal
-   candidates start unchecked.
-5. **Sync Selected** prepares compatible media and publishes verified changes.
-   Use the app’s eject action when you are finished.
-
-Optional acoustic matching helps recognize the same recording after format or
-metadata changes. Sync can also recognize media from a previous successful Sync
-without generating a new fingerprint.
-
-| Media folders                                                                                                                                                                              | Sync selection                                                                                                                                                                                 |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ![Choose Media Folders dialog with per-folder media types and subfolder scanning](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/media-folders.webp) | ![Sync media selection with albums grouped as selected, mixed, and deselected](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/sync-media-selection.webp) |
-
-![Sync Review with selected additions, unchecked removals, and items needing attention](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/sync-change-review.webp)
-
-## iPod compatibility
-
-iOpenPod targets these iPod families. Available features depend on the model.
-
-| Family                | Target                                             |
-| --------------------- | -------------------------------------------------- |
-| iPod and iPod classic | Full-size generations 1–5.5 and the classic family |
-| iPod mini             | 1st and 2nd generation                             |
-| iPod nano             | 1st–7th generation                                 |
-
-**iPod shuffle, iPod touch, and iPhone are not yet supported.** The computer
-must already be able to read and write the iPod’s filesystem.
-
-![Photo Library with the Manage Albums dialog and selected photo inspector](https://raw.githubusercontent.com/TheRealSavi/iOpenPod/main/website/screenshots/iop2/photo-albums.webp)
-
-## Develop and contribute
-
-Clone the repository, open its directory, and use the locked UV environment:
+### 运行离线校验
 
 ```shell
-uv sync --locked
-uv run iopenpod
+dotnet run --project csharp/tests/iOpenPod.Verification -c Release
 ```
 
-Before submitting changes, run the repository checks:
+校验内容：真实捕获的 iTunesDB / ArtworkDB / PhotosDB 逐字节往返、HASH58 官方向量、
+HASHAB 全部 100 组官方向量、设备目录与 SysInfo 识别、编辑后逐字节复原、播放列表增删往返。
+当前 **26 项全部通过**。
 
-```shell
-uv lock --check
-uv run ruff format --check .
-uv run ruff check .
-uv run rumdl check .
-uv run mypy
-uv run pytest
+## 已知限制
+
+* iPod nano 第 5 / 6 / 7 代使用压缩 iTunesCDB **加** SQLite 音乐库，目前只能浏览、播放与备份，
+  不能写入；界面会明确提示原因。其余机型可完整读写。
+* 同步默认保持原格式，不做音频转码。
+* 尚未实现：智能播放列表规则编辑、照片库管理、播客订阅、Last.fm / ListenBrainz 记录、
+  macOS / Linux 版本、应用内自动更新。
+
+## 仓库结构
+
+```
+csharp/                    C# / WinUI 3 重制版（本仓库的主体）
+├─ src/                    五个工程，见上文职责表
+├─ tests/                  离线校验程序
+├─ build/                  发布脚本与运行时安装脚本
+└─ README.md               重制版详细文档
+src/ packaging/ website/   原项目的 Python / Qt 实现（保留以便对照与追溯）
+docs/ tests/               原项目的文档与测试
+README-upstream.md         原项目 README
 ```
 
-Hardware testing, platform testing, reproducible bug reports, and focused pull
-requests all help. For bug reports, include your iPod model, operating system,
-iOpenPod version, and steps to reproduce the problem.
+## 授权与致谢
 
-Keep each pull request focused on one change. Discuss proposed work in an issue or
-on [Discord](https://discord.gg/9Yy499Tf5d) before starting, especially for major
-changes, so we can agree on the approach.
+本项目沿用原项目的 **GPL-3.0-or-later** 授权，见 [LICENSE](LICENSE)。
 
-The application ships as one distribution with four internal boundaries:
+* 上游项目：[TheRealSavi/iOpenPod](https://github.com/TheRealSavi/iOpenPod)
+* HASHAB 算法：[dstaley/hashab](https://github.com/dstaley/hashab)（Unlicense，公有领域）
+* 格式研究参考：libgpod、gtkpod
 
-| Package               | Responsibility                                 |
-| --------------------- | ---------------------------------------------- |
-| `src/iOpenPod`        | Application workflows, state, and GUI          |
-| `src/device_registry` | iPod identity and capabilities                 |
-| `src/iPodDB`          | iPod database formats                          |
-| `src/storage`         | Safe filesystem and removable-media operations |
-
-Read [AGENTS.md](https://github.com/TheRealSavi/iOpenPod/blob/main/AGENTS.md), the [project context](https://github.com/TheRealSavi/iOpenPod/blob/main/CONTEXT.md), and the
-[documentation map](https://github.com/TheRealSavi/iOpenPod/blob/main/docs/README.md) before making substantial changes.
-[Packaging](https://github.com/TheRealSavi/iOpenPod/blob/main/docs/packaging.md) covers native builds and store release gates;
-[website maintenance](https://github.com/TheRealSavi/iOpenPod/blob/main/website/README.md) covers screenshots and channel activation.
-
-## Related projects
-
-* [libgpod](https://github.com/gtkpod/libgpod) - C library for iPod database access (the reference implementation this project learned from)
-
-* [gtkpod](https://github.com/gtkpod/gtkpod) - GTK+ iPod manager
-
-* [Rockbox](https://www.rockbox.org/) - Open-source firmware replacement for iPods
-
-## Coming from iTunes or another iPod manager?
-
-iOpenPod works with the library on your iPod and media folders on your computer.
-Start by browsing the existing library and capturing a Backup Snapshot, then choose
-what to bring over in Sync Review.
-
-* **No separate libgpod installation.** iOpenPod uses its own Python iPod database
-  implementation, informed by libgpod and gtkpod research.
-
-* **All features are free.** Donations support development without unlocking features.
-
-* **Review before writing.** Sync shows planned changes, with removals unchecked by
-  default. Backup Snapshots are user-controlled, and interrupted writes have
-  explicit recovery actions.
-
-***
-
-## Star history
-
-<!-- markdownlint-disable MD033 -->
-
-<a href="https://www.star-history.com/?repos=therealsavi%2Fiopenpod&type=timeline&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=therealsavi/iopenpod&type=timeline&theme=dark&legend=top-left&sealed_token=aMCIa4pbVoIhlxj9qK6fW6xT1G5WPmVyftpcUHMTDCF-jNcb-ZD5ewReZkCnZxjUqpEYILAoYH1UP1nYDNyqT1PbhUaA09JI1Lrq1EZ2-mO9bYPn3EWaHyBxmimY3pGYha3MHx1aNeAXRuF0UoijWcDkCgvNBHYDbZNCLG6zG8wx6tDuSh8cmrTN0uas" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=therealsavi/iopenpod&type=timeline&legend=top-left&sealed_token=aMCIa4pbVoIhlxj9qK6fW6xT1G5WPmVyftpcUHMTDCF-jNcb-ZD5ewReZkCnZxjUqpEYILAoYH1UP1nYDNyqT1PbhUaA09JI1Lrq1EZ2-mO9bYPn3EWaHyBxmimY3pGYha3MHx1aNeAXRuF0UoijWcDkCgvNBHYDbZNCLG6zG8wx6tDuSh8cmrTN0uas" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=therealsavi/iopenpod&type=timeline&legend=top-left&sealed_token=aMCIa4pbVoIhlxj9qK6fW6xT1G5WPmVyftpcUHMTDCF-jNcb-ZD5ewReZkCnZxjUqpEYILAoYH1UP1nYDNyqT1PbhUaA09JI1Lrq1EZ2-mO9bYPn3EWaHyBxmimY3pGYha3MHx1aNeAXRuF0UoijWcDkCgvNBHYDbZNCLG6zG8wx6tDuSh8cmrTN0uas" />
- </picture>
-</a>
-
-<!-- markdownlint-enable MD033 -->
-
-***
-
-## Support
-
-iOpenPod is free and open source. Donations are optional and help support development.
-
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/johngibbons)
-
-## License and credits
-
-Licensed under **GPL-3.0-or-later**. All features are free; optional
-[donations](https://ko-fi.com/johngibbons) support development without unlocking
-features. See [LICENSE](https://github.com/TheRealSavi/iOpenPod/blob/main/LICENSE), [COPYING.md](https://github.com/TheRealSavi/iOpenPod/blob/main/COPYING.md), and
-[ACKNOWLEDGEMENTS.md](https://github.com/TheRealSavi/iOpenPod/blob/main/ACKNOWLEDGEMENTS.md) for the license grant and third-party
-credits, including HASHAB, libgpod, and gtkpod research. The application icon has
-separate permission terms documented with its assets.
-
-Independent software, not affiliated with or endorsed by Apple Inc. iPod and
-iTunes are trademarks of Apple Inc.
+iPod 与 iTunes 是 Apple Inc. 的商标；本软件是独立作品，与 Apple 无任何关联，也未获得其背书。
