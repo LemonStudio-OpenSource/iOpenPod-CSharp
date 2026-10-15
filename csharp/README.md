@@ -117,7 +117,20 @@ dotnet publish src/iOpenPod.WinUI -c Release -r win-x64 --self-contained true
 ```
 
 产物在 `src/iOpenPod.WinUI/bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/`，
-入口是 `iOpenPod.exe`。**整个 publish 目录都要保留**，直接运行 `iOpenPod.exe` 即可，无需安装任何运行时。
+入口是 `iOpenPod.exe`。**整个 publish 目录都要保留**，直接运行 `iOpenPod.exe` 即可，无需安装 .NET。
+
+> ### ⚠️ 首次使用前必须做一件事：安装 Windows App Runtime
+>
+> WinUI 3 应用需要**操作系统级**的 **Windows App Runtime 1.8** 组件才能初始化图形合成器。
+> 即使应用是自包含发布的（.NET 与 WinAppSDK 都随包携带），这些系统组件仍然必须存在，
+> 否则**窗口会出现但内容一片空白**，而且在日志里只留下"主窗口已就绪"，看不出原因。
+>
+> 发行包中已经附带微软官方的四个 MSIX 组件与一键安装脚本：
+>
+> 1. 双击 **`首次运行-安装运行时.cmd`**（只需一次，不需要管理员权限）；
+> 2. 然后运行 `iOpenPod.exe`。
+>
+> 如果脚本失败，也可以手动依次双击 `Runtime\` 目录下的四个 `.msix` 文件。
 
 > 说明：非打包的 WinUI 3 应用在 `dotnet publish` 时不会自动复制应用自身的 `.pri` 资源索引，
 > 会导致启动时找不到 XAML 资源。项目中的 `CopyAppPriToPublish` 目标已显式修复这一点。

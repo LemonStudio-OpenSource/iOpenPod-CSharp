@@ -45,13 +45,64 @@ public sealed partial class MainWindow : Window
         Closed += OnClosed;
         AppLog.Info("界面", "主窗口已就绪。");
 
+        StartRenderWatchdog();
+
         // 自检模式：把根元素渲染为 PNG 后退出，用于无人值守环境下的界面校验。
         var selfTestPath = Environment.GetEnvironmentVariable("IOPENPOD_SELFTEST");
         if (!string.IsNullOrEmpty(selfTestPath))
         {
             AppLog.Info("自检", $"已启用界面自检，输出到 {selfTestPath}。");
-            _ = RunSelfTestAsync(selfTestPath);
+            Activated += OnSelfTestActivated;
+
+            void OnSelfTestActivated(object sender, WindowActivatedEventArgs args)
+            {
+                if (args.WindowActivationState == WindowActivationState.Deactivated)
+                {
+                    return;
+                }
+
+                Activated -= OnSelfTestActivated;
+                DispatcherQueue.TryEnqueue(() => _ = RunSelfTestAsync(selfTestPath));
+            }
         }
+    }
+
+    /// <summary>
+    /// 渲染看门狗。
+    ///
+    /// WinUI 3 需要操作系统级的 Windows App Runtime 组件才能初始化图形合成器。
+    /// 缺少该组件时窗口会正常出现（标题栏可见），但客户区一片空白，
+    /// 而且不会抛出任何异常。这里在启动后检查一次窗口是否真的被激活，
+    /// 如果没有就写一条可操作的中文提示，避免用户对着空白窗口无从下手。
+    /// </summary>
+    private void StartRenderWatchdog()
+    {
+        var activated = false;
+        Activated += (_, args) =>
+        {
+            if (args.WindowActivationState != WindowActivationState.Deactivated)
+            {
+                activated = true;
+            }
+        };
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(8) };
+        timer.Tick += (_, _) =>
+        {
+            timer.Stop();
+            if (activated)
+            {
+                AppLog.Info("界面", $"界面渲染正常（内容 {RootGrid.ActualWidth:F0}×{RootGrid.ActualHeight:F0}）。");
+                return;
+            }
+
+            AppLog.Error("界面",
+                "界面未能初始化：窗口已创建但从未被激活，客户区会是空白。" +
+                "这几乎总是因为系统缺少 Windows App Runtime 1.8 组件。" +
+                "请先运行发行包中的“首次运行-安装运行时.cmd”，" +
+                "或手动安装 Runtime 目录下的四个 .msix 文件，然后重新启动本程序。");
+        };
+        timer.Start();
     }
 
     /// <summary>把当前界面渲染为 PNG 并退出。仅用于自动化界面校验。</summary>
@@ -59,24 +110,44 @@ public sealed partial class MainWindow : Window
     {
         try
         {
-            await Task.Delay(4000);
+            AppLog.Info("自检", "自检任务已开始执行。");
+            await Task.Delay(1500);
+            AppLog.Info("自检", "延时结束，准备读取布局。");
+            AppLog.Info("自检",
+                $"布局诊断：RootGrid {RootGrid.ActualWidth}×{RootGrid.ActualHeight}，" +
+                $"Content={Content?.GetType().Name ?? "null"}，" +
+                $"子元素 {Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(RootGrid)} 个，" +
+                $"帧内容={ContentFrame.Content?.GetType().Name ?? "null"}，" +
+                $"XamlRoot={(RootGrid.XamlRoot is null ? "null" : "ok")}。");
+
             var bitmap = new Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap();
-            await bitmap.RenderAsync(RootGrid);
-            var pixels = await bitmap.GetPixelsAsync();
-            var bytes = new byte[pixels.Length];
-            using (var reader = Windows.Storage.Streams.DataReader.FromBuffer(pixels))
+            var renderTask = bitmap.RenderAsync(RootGrid).AsTask();
+            if (await Task.WhenAny(renderTask, Task.Delay(15000)) != renderTask)
             {
-                reader.ReadBytes(bytes);
+                AppLog.Warning("自检", "RenderTargetBitmap 超时，界面树没有产生可渲染内容。");
             }
+            else if (renderTask.IsFaulted)
+            {
+                AppLog.Warning("自检", $"RenderTargetBitmap 失败：{renderTask.Exception?.GetBaseException().Message}");
+            }
+            else
+            {
+                var pixels = await bitmap.GetPixelsAsync();
+                var bytes = new byte[pixels.Length];
+                using (var reader = Windows.Storage.Streams.DataReader.FromBuffer(pixels))
+                {
+                    reader.ReadBytes(bytes);
+                }
 
-            var width = bitmap.PixelWidth;
-            var height = bitmap.PixelHeight;
-            var bgra = new byte[width * height * 4];
-            Array.Copy(bytes, bgra, Math.Min(bytes.Length, bgra.Length));
+                var width = bitmap.PixelWidth;
+                var height = bitmap.PixelHeight;
+                var bgra = new byte[width * height * 4];
+                Array.Copy(bytes, bgra, Math.Min(bytes.Length, bgra.Length));
 
-            var png = IOpenPod.IPodDb.Artwork.ImageLoader.EncodePng(bgra, width, height);
-            await File.WriteAllBytesAsync(path, png);
-            AppLog.Info("自检", $"界面自检图像已写入 {path}（{width}×{height}）。");
+                var png = IOpenPod.IPodDb.Artwork.ImageLoader.EncodePng(bgra, width, height);
+                await File.WriteAllBytesAsync(path, png);
+                AppLog.Info("自检", $"界面自检图像已写入 {path}（{width}×{height}）。");
+            }
         }
         catch (Exception error)
         {
