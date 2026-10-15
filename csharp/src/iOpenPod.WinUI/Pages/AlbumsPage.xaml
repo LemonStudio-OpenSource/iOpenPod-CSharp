@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="IOpenPod.WinUI.Pages.AlbumsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Padding="24,16,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="专辑" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock x:Name="SummaryText" Style="{StaticResource PageSubtitleStyle}" Text="尚未加载设备。" />
+            </StackPanel>
+            <Button Grid.Column="1" Click="OnBackClick" x:Name="BackButton" Visibility="Collapsed"
+                    VerticalAlignment="Top">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE72B;" FontSize="13" />
+                    <TextBlock Text="返回专辑列表" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <GridView x:Name="AlbumGrid" Grid.Row="1" ItemTemplate="{StaticResource AlbumCardTemplate}"
+                  SelectionMode="Single" IsItemClickEnabled="True" ItemClick="OnAlbumClick"
+                  Padding="0,4,0,4" />
+
+        <Grid x:Name="DetailPanel" Grid.Row="1" Visibility="Collapsed" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Grid.Column="0" Width="150" Height="150" CornerRadius="8"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                        <Image x:Name="DetailCover" Stretch="UniformToFill" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                        <TextBlock x:Name="DetailAlbum" FontSize="22" FontWeight="SemiBold"
+                                   TextWrapping="Wrap" />
+                        <TextBlock x:Name="DetailArtist" FontSize="15"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="DetailMeta" Style="{StaticResource MutedTextStyle}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="8">
+                        <Button Click="OnPlayAlbumClick" Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE768;" FontSize="13" />
+                                <TextBlock Text="播放整张专辑" />
+                            </StackPanel>
+                        </Button>
+                        <Button Click="OnEnqueueAlbumClick">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE710;" FontSize="13" />
+                                <TextBlock Text="加入播放队列" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <ListView x:Name="DetailTracks" Grid.Row="1" ItemTemplate="{StaticResource TrackRowTemplate}"
+                      SelectionMode="Extended" IsItemClickEnabled="True" DoubleTapped="OnTrackDoubleTapped">
+                <ListView.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem Text="立即播放" Click="OnTrackPlayClick" />
+                        <MenuFlyoutItem Text="添加到队列" Click="OnTrackEnqueueClick" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="编辑信息" Click="OnTrackEditClick" />
+                        <MenuFlyoutItem Text="从 iPod 移除" Click="OnTrackRemoveClick" />
+                    </MenuFlyout>
+                </ListView.ContextFlyout>
+            </ListView>
+        </Grid>
+
+        <StackPanel x:Name="EmptyPanel" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center"
+                    Spacing="10" Visibility="Collapsed">
+            <FontIcon Glyph="&#xE8FD;" FontSize="42" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="还没有可显示的专辑。" HorizontalAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+    </Grid>
+</Page>

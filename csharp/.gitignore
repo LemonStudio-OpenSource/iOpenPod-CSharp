@@ -1,0 +1,10 @@
+# C# / .NET 构建产物
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+
+# 发布与打包结果
+dist/
+*.zip

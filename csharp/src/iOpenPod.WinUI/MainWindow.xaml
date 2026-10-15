@@ -1,0 +1,191 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="IOpenPod.WinUI.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
+    xmlns:conv="using:IOpenPod.WinUI.Converters"
+    xmlns:media="using:Microsoft.UI.Xaml.Media"
+    Title="iOpenPod 管理器">
+
+    <Grid x:Name="RootGrid" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.Resources>
+            <conv:BytesToSizeConverter x:Key="BytesToSize" />
+            <conv:DurationConverter x:Key="Duration" />
+            <conv:RatingToStarsConverter x:Key="Stars" />
+            <conv:StringToVisibilityConverter x:Key="StringToVisibility" />
+            <conv:InverseBooleanConverter x:Key="InverseBool" />
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 自定义标题栏 -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="44" Padding="14,0,140,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="10">
+                <Image Source="ms-appx:///Assets/icon.png" Width="20" Height="20" />
+                <TextBlock Text="iOpenPod 管理器" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <Border Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        CornerRadius="10" Padding="8,2,8,2" VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleDeviceText" Text="未连接设备" FontSize="11"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- 主导航 -->
+        <NavigationView
+            x:Name="Nav"
+            Grid.Row="1"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            PaneDisplayMode="Left"
+            OpenPaneLength="228"
+            IsPaneToggleButtonVisible="True"
+            SelectionChanged="OnNavigationSelectionChanged">
+
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="我的 iPod" Tag="device" ToolTipService.ToolTip="设备发现与信息">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8EA;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem Content="歌曲" Tag="tracks" ToolTipService.ToolTip="全部曲目">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8D6;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="专辑" Tag="albums">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="艺术家" Tag="artists">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE716;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="流派" Tag="genres">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8EC;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="播放列表" Tag="playlists">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem Content="同步" Tag="sync" ToolTipService.ToolTip="从电脑添加媒体">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE895;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="备份快照" Tag="backup">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE753;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem Content="日志" Tag="logs">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="设置" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Frame x:Name="ContentFrame" />
+        </NavigationView>
+
+        <!-- 播放条 -->
+        <Border Grid.Row="2" x:Name="PlayerBar" Padding="14,8,14,8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Width="48" Height="48" CornerRadius="6"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                    <Image x:Name="PlayerCover" Stretch="UniformToFill" />
+                </Border>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="PlayerTitle" Text="未在播放" FontWeight="SemiBold"
+                               TextTrimming="CharacterEllipsis" MaxLines="1" />
+                    <TextBlock x:Name="PlayerArtist" Text="选择一首歌曲开始播放"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12"
+                               TextTrimming="CharacterEllipsis" MaxLines="1" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+                    <Button x:Name="PrevButton" Click="OnPreviousClick" ToolTipService.ToolTip="上一首">
+                        <FontIcon Glyph="&#xE892;" FontSize="14" />
+                    </Button>
+                    <Button x:Name="PlayButton" Click="OnPlayPauseClick" ToolTipService.ToolTip="播放/暂停">
+                        <FontIcon x:Name="PlayIcon" Glyph="&#xE768;" FontSize="16" />
+                    </Button>
+                    <Button x:Name="NextButton" Click="OnNextClick" ToolTipService.ToolTip="下一首">
+                        <FontIcon Glyph="&#xE893;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                    <TextBlock x:Name="PositionText" Text="0:00" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Slider x:Name="SeekSlider" Minimum="0" Maximum="100" Value="0" Width="420"
+                            VerticalAlignment="Center" ValueChanged="OnSeekValueChanged"
+                            ThumbToolTipValueConverter="{StaticResource Duration}" />
+                    <TextBlock x:Name="DurationText" Text="0:00" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE767;" FontSize="14" />
+                    <Slider x:Name="VolumeSlider" Minimum="0" Maximum="1" Value="0.8" Width="110"
+                            VerticalAlignment="Center" ValueChanged="OnVolumeValueChanged" />
+                </StackPanel>
+
+                <Button Grid.Column="5" Click="OnQueueClick" VerticalAlignment="Center"
+                        ToolTipService.ToolTip="查看播放队列与歌词">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                        <TextBlock Text="队列" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- 状态栏 -->
+        <Border Grid.Row="3" Padding="14,5,14,5"
+                Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Grid.Column="0" Text="就绪" FontSize="12"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock x:Name="StatusRightText" Grid.Column="1" Text="" FontSize="12"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

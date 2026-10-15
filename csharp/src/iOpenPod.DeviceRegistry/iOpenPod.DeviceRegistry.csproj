@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>IOpenPod.DeviceRegistry</RootNamespace>
+    <AssemblyName>IOpenPod.DeviceRegistry</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Data\catalog.json" />
+  </ItemGroup>
+
+</Project>

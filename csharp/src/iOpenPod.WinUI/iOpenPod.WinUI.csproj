@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>IOpenPod.WinUI</RootNamespace>
+    <AssemblyName>iOpenPod</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <UseWinUI>true</UseWinUI>
+    <WindowsPackageType>None</WindowsPackageType>
+    <EnableMsixTooling>false</EnableMsixTooling>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>false</PublishSingleFile>
+    <ApplicationIcon>Assets\iopenpod.ico</ApplicationIcon>
+    <DefaultLanguage>zh-CN</DefaultLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.250916003" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.4948" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\iOpenPod.App\iOpenPod.App.csproj" />
+    <ProjectReference Include="..\iOpenPod.IPodDb\iOpenPod.IPodDb.csproj" />
+    <ProjectReference Include="..\iOpenPod.DeviceRegistry\iOpenPod.DeviceRegistry.csproj" />
+    <ProjectReference Include="..\iOpenPod.Storage\iOpenPod.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    非打包 WinUI3 应用在 dotnet publish 时不会把应用自身的 .pri 资源索引复制到
+    发布目录，导致启动时找不到 XAML 资源而崩溃（0xC000027B）。这里显式补齐。
+  -->
+  <Target Name="CopyAppPriToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <AppPriFiles Include="$(OutDir)$(AssemblyName).pri" Condition="Exists('$(OutDir)$(AssemblyName).pri')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppPriFiles)" DestinationFolder="$(PublishDir)" ContinueOnError="true" />
+    <Copy SourceFiles="@(AppPriFiles)" DestinationFiles="$(PublishDir)resources.pri" ContinueOnError="true" />
+  </Target>
+
+</Project>

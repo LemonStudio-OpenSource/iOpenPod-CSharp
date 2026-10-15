@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>IOpenPod.IPodDb</RootNamespace>
+    <AssemblyName>IOpenPod.IPodDb</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\iOpenPod.DeviceRegistry\iOpenPod.DeviceRegistry.csproj" />
+  </ItemGroup>
+
+</Project>

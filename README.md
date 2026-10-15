@@ -2,6 +2,11 @@
 
 **Your music. Your iPod.**
 
+> **C# / WinUI 3 重制版（中文）**
+> 本仓库新增了 `csharp/` 目录：一个完全使用 C# 与 .NET 10 + WinUI 3 重写的实现，
+> 界面、日志与所有用户可见内容均为中文，构建产物是自带运行时的可执行程序。
+> 入口文档见 [`csharp/README.md`](csharp/README.md)。
+
 [![License: GPL-3.0-or-later](https://img.shields.io/badge/License-GPL--3.0--or--later-blue.svg?style=plastic)](LICENSE)
 [![Platform: Win | Mac | Linux](https://img.shields.io/badge/Platform-Win%20%7C%20Mac%20%7C%20Linux-2ea44f.svg?style=plastic)](#download-and-install)
 [![GitHub: Download latest](https://img.shields.io/badge/GitHub-Download%20latest-0a6fdb?style=plastic)](https://github.com/TheRealSavi/iOpenPod/releases/latest)

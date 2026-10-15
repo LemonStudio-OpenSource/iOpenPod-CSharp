@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="IOpenPod.WinUI.Pages.BackupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls">
+
+    <Grid Padding="24,16,24,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <StackPanel>
+                <TextBlock Text="备份快照" Style="{StaticResource PageTitleStyle}" />
+                <TextBlock Style="{StaticResource PageSubtitleStyle}"
+                           Text="把 iPod 上的音乐库、播放列表与插图完整保存到电脑。还原前会自动再创建一次安全快照。" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Spacing="8">
+                <Button Click="OnOpenFolderClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE838;" FontSize="13" />
+                        <TextBlock Text="打开备份目录" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="CreateButton" Click="OnCreateClick" Style="{StaticResource AccentButtonStyle}">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="13" />
+                        <TextBlock Text="立即备份" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <controls:InfoBar x:Name="NoticeBar" Grid.Row="1" Margin="0,12,0,12"
+                          IsOpen="False" IsClosable="True" Severity="Informational" />
+
+        <Border Grid.Row="2" Style="{StaticResource CardBorderStyle}" Margin="0,0,0,12">
+            <StackPanel Spacing="8">
+                <TextBlock Text="备份位置" FontWeight="SemiBold" />
+                <TextBlock x:Name="BackupPathText" Style="{StaticResource MutedTextStyle}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Click="OnChangeFolderClick">
+                        <TextBlock Text="更改位置…" />
+                    </Button>
+                    <Button Click="OnRefreshClick">
+                        <TextBlock Text="刷新列表" />
+                    </Button>
+                </StackPanel>
+                <ProgressBar x:Name="Progress" Minimum="0" Maximum="1" Value="0" Visibility="Collapsed" />
+                <TextBlock x:Name="ProgressText" Style="{StaticResource MutedTextStyle}" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="3" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Padding="0">
+                <ListView x:Name="BackupList" ItemTemplate="{StaticResource BackupRowTemplate}"
+                          SelectionMode="Single" SelectionChanged="OnBackupSelectionChanged" Padding="4" />
+            </Border>
+
+            <StackPanel Grid.Column="1" Spacing="8" Width="180">
+                <Button x:Name="RestoreButton" Click="OnRestoreClick" HorizontalAlignment="Stretch"
+                        IsEnabled="False">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE777;" FontSize="13" />
+                        <TextBlock Text="还原到设备" />
+                    </StackPanel>
+                </Button>
+                <Button x:Name="DeleteButton" Click="OnDeleteClick" HorizontalAlignment="Stretch"
+                        IsEnabled="False">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE74D;" FontSize="13" />
+                        <TextBlock Text="删除快照" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>
