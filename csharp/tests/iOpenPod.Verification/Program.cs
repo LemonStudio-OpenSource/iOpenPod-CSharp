@@ -12,7 +12,7 @@ namespace DbCheck;
 /// <summary>数据库层与设备层的离线校验工具。</summary>
 internal static class Program
 {
-        private static string Fixtures { get; } = ResolveFixtureRoot();
+    private static string Fixtures { get; } = ResolveFixtureRoot();
 
     /// <summary>从当前程序集位置向上查找仓库中的测试夹具目录。</summary>
     private static string ResolveFixtureRoot()
@@ -31,6 +31,33 @@ internal static class Program
 
         return Path.Combine(AppContext.BaseDirectory, "fixtures");
     }
+
+    /// <summary>查找随本校验项目一起保存的夹具目录（HASHAB 官方向量等）。</summary>
+    private static string ResolveLocalFixtureRoot()
+    {
+        var direct = Path.Combine(AppContext.BaseDirectory, "fixtures");
+        if (Directory.Exists(direct))
+        {
+            return direct;
+        }
+
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            var candidate = Path.Combine(
+                directory.FullName, "tests", "iOpenPod.Verification", "fixtures");
+            if (Directory.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        return direct;
+    }
+
+    private static readonly string LocalFixtures = ResolveLocalFixtureRoot();
 
     private static int _passed;
     private static int _failed;
@@ -169,7 +196,7 @@ internal static class Program
     {
         try
         {
-            var path = Path.Combine(AppContext.BaseDirectory, "fixtures", "hashab-test-data.json");
+            var path = Path.Combine(LocalFixtures, "hashab-test-data.json");
             if (!File.Exists(path))
             {
                 Console.WriteLine("    （未找到 HASHAB 官方向量，跳过）");
