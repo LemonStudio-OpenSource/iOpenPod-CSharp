@@ -7,6 +7,15 @@ namespace IOpenPod.App.Sync;
 /// <summary>宿主上的一个媒体文件。</summary>
 public sealed record HostMediaItem(string HostPath, MediaTagInfo Tags)
 {
+    /// <summary>设备兼容性判定；未探测时为 <c>null</c>（按可直接播放处理）。</summary>
+    public ConversionDecision? Conversion { get; init; }
+
+    /// <summary>媒体探测结果；未探测时为 <c>null</c>。</summary>
+    public MediaProbeResult? Probe { get; init; }
+
+    /// <summary>该文件是否需要转码后才能进入设备。</summary>
+    public bool NeedsConversion => Conversion?.RequiresWork ?? false;
+
     /// <summary>用于与设备曲目比对的稳定键。</summary>
     public string MatchKey => BuildKey(
         Tags.Title.Length > 0 ? Tags.Title : Path.GetFileNameWithoutExtension(HostPath),
@@ -57,6 +66,14 @@ public sealed record SyncChange(
         SyncChangeKind.Remove => "移除",
         _ => "未知",
     };
+
+    /// <summary>该变更是否需要在写入前转码。</summary>
+    public bool NeedsConversion => Host?.NeedsConversion ?? false;
+
+    /// <summary>转码说明（无需转码时为空）。</summary>
+    public string ConversionNote => Host?.Conversion is { RequiresWork: true } decision
+        ? $"需要转码：{decision.Reason}"
+        : string.Empty;
 }
 
 /// <summary>同步计划。</summary>

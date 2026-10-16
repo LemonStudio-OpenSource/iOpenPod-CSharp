@@ -225,6 +225,7 @@ public sealed partial class MainWindow : Window
             "playlists" => typeof(PlaylistsPage),
             "sync" => typeof(SyncPage),
             "backup" => typeof(BackupPage),
+            "rockbox" => typeof(RockboxPage),
             "logs" => typeof(LogPage),
             "settings" => typeof(SettingsPage),
             _ => typeof(DevicePage),

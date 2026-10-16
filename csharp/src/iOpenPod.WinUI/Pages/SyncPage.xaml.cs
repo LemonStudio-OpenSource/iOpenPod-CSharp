@@ -42,6 +42,11 @@ public sealed partial class SyncPage : Page, IRefreshable
         ScanButton.IsEnabled = ready;
         RunButton.IsEnabled = ready && _plan is not null;
 
+        ToolStatusText.Text = device is null
+            ? string.Empty
+            : $"{new SyncEngine(device, AppState.Current.Settings).MediaToolStatus}" +
+              $"　{new SyncEngine(device, AppState.Current.Settings).VideoCapability}";
+
         if (device is null)
         {
             NoticeBar.Severity = InfoBarSeverity.Warning;

@@ -68,6 +68,16 @@ public sealed partial class SettingsPage : Page, IRefreshable
             };
 
             BitrateBox.Value = settings.TranscodeBitrateKbps;
+            FfmpegPathBox.Text = settings.FfmpegDirectory;
+            AudioConversionSwitch.IsOn = settings.EnableAudioConversion;
+            VideoConversionSwitch.IsOn = settings.EnableVideoConversion;
+            VideoBitrateBox.Value = settings.VideoBitrateKbps;
+            VideoWidthBox.Value = settings.VideoMaxWidth;
+            VideoHeightBox.Value = settings.VideoMaxHeight;
+            TagWriteSwitch.IsOn = settings.WriteTagsToSourceFiles;
+            TagBackupSwitch.IsOn = settings.TagWriteCreateBackup;
+            AutoRockboxSwitch.IsOn = settings.AutoInstallRockboxOnSync;
+            RefreshFfmpegStatus();
             SyncArtworkSwitch.IsOn = settings.SyncArtwork;
             BackupBeforeSyncSwitch.IsOn = settings.BackupBeforeSync;
             SystemMediaSwitch.IsOn = settings.EnableSystemMediaControls;
@@ -81,8 +91,7 @@ public sealed partial class SettingsPage : Page, IRefreshable
         }
     }
 
-    private void OnThemeChanged(object sender, SelectionChangedEventArgs e)
-    {
+    private void OnThemeChanged(object sender, SelectionChangedEventArgs e)    {
         if (_loading)
         {
             return;
@@ -263,5 +272,132 @@ public sealed partial class SettingsPage : Page, IRefreshable
         AppState.Current.ReplaceSettings(new AppSettings());
         Refresh();
         MainWindow.SetStatus("设置已恢复为默认值。");
+    }
+
+    // ---- 媒体工具与转码 ----
+
+    /// <summary>刷新 ffmpeg / ffprobe 的检测结果。</summary>
+    private void RefreshFfmpegStatus()
+    {
+        try
+        {
+            var tools = IOpenPod.App.Media.FfmpegTools.Locate(AppState.Current.Settings.FfmpegDirectory);
+            FfmpegStatusText.Text = tools.Display.Replace(Environment.NewLine, "　");
+            MainWindow.SetStatus(tools.IsComplete
+                ? "已找到 ffmpeg 与 ffprobe，转码与精确探测可用。"
+                : "未找到完整的 ffmpeg / ffprobe，转码与精确探测受限。");
+        }
+        catch (Exception error)
+        {
+            FfmpegStatusText.Text = $"检测失败：{error.Message}";
+        }
+    }
+
+    private async void OnBrowseFfmpeg(object sender, RoutedEventArgs e)
+    {
+        var folder = await FilePickerService.PickFolderAsync();
+        if (string.IsNullOrEmpty(folder))
+        {
+            return;
+        }
+
+        FfmpegPathBox.Text = folder;
+        AppState.Current.Settings.FfmpegDirectory = folder;
+        AppState.Current.SaveSettings();
+        RefreshFfmpegStatus();
+    }
+
+    private void OnRedetectFfmpeg(object sender, RoutedEventArgs e)
+    {
+        AppState.Current.Settings.FfmpegDirectory = FfmpegPathBox.Text.Trim();
+        AppState.Current.SaveSettings();
+        RefreshFfmpegStatus();
+    }
+
+    private void OnAudioConversionToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        AppState.Current.Settings.EnableAudioConversion = AudioConversionSwitch.IsOn;
+        AppState.Current.SaveSettings();
+    }
+
+    private void OnVideoConversionToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        AppState.Current.Settings.EnableVideoConversion = VideoConversionSwitch.IsOn;
+        AppState.Current.SaveSettings();
+    }
+
+    private void OnVideoBitrateChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loading || double.IsNaN(args.NewValue))
+        {
+            return;
+        }
+
+        AppState.Current.Settings.VideoBitrateKbps = (int)args.NewValue;
+        AppState.Current.SaveSettings();
+    }
+
+    private void OnVideoSizeChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loading || double.IsNaN(args.NewValue))
+        {
+            return;
+        }
+
+        if (!double.IsNaN(VideoWidthBox.Value))
+        {
+            AppState.Current.Settings.VideoMaxWidth = (int)VideoWidthBox.Value;
+        }
+
+        if (!double.IsNaN(VideoHeightBox.Value))
+        {
+            AppState.Current.Settings.VideoMaxHeight = (int)VideoHeightBox.Value;
+        }
+
+        AppState.Current.SaveSettings();
+    }
+
+    private void OnTagWriteToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        AppState.Current.Settings.WriteTagsToSourceFiles = TagWriteSwitch.IsOn;
+        AppState.Current.SaveSettings();
+        AppLog.Info("设置", $"标签写回源文件已{(TagWriteSwitch.IsOn ? "启用" : "停用")}。");
+    }
+
+    private void OnTagBackupToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        AppState.Current.Settings.TagWriteCreateBackup = TagBackupSwitch.IsOn;
+        AppState.Current.SaveSettings();
+    }
+
+    private void OnAutoRockboxToggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        AppState.Current.Settings.AutoInstallRockboxOnSync = AutoRockboxSwitch.IsOn;
+        AppState.Current.SaveSettings();
     }
 }

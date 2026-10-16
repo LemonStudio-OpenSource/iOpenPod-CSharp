@@ -5,6 +5,7 @@ using IOpenPod.App.Devices;
 using IOpenPod.App.Library;
 using IOpenPod.App.Logging;
 using IOpenPod.App.Media;
+using IOpenPod.App.Rockbox;
 using IOpenPod.App.Settings;
 using IOpenPod.App.Sync;
 using IOpenPod.IPodDb;
@@ -31,12 +32,38 @@ public sealed class SyncEngine
 
     private readonly ActiveDevice _device;
     private readonly AppSettings _settings;
+    private readonly MediaTranscodeOptions _transcodeOptions;
+    private readonly MediaTranscoder _transcoder;
 
     public SyncEngine(ActiveDevice device, AppSettings settings)
     {
         _device = device;
         _settings = settings;
+
+        _transcodeOptions = new MediaTranscodeOptions
+        {
+            FfmpegDirectory = settings.FfmpegDirectory,
+            AudioFormat = settings.TranscodeFormat,
+            AudioBitrateKbps = settings.TranscodeBitrateKbps,
+            AllowAudioConversion = settings.EnableAudioConversion,
+            AllowVideoConversion = settings.EnableVideoConversion,
+            VideoBitrateKbps = settings.VideoBitrateKbps,
+            VideoMaxWidth = settings.VideoMaxWidth,
+            VideoMaxHeight = settings.VideoMaxHeight,
+            VideoMaxFps = device.Profile?.Capabilities.Video.MaxFps is > 0 and var fps ? fps : 30,
+            WorkDirectory = Path.Combine(settings.EffectiveWorkDirectory, "transcode"),
+        };
+
+        _transcoder = new MediaTranscoder(
+            new FfmpegTools(FfmpegTools.Locate(settings.FfmpegDirectory)),
+            _transcodeOptions.WorkDirectory!);
     }
+
+    /// <summary>本次同步可用的媒体工具说明。</summary>
+    public string MediaToolStatus => _transcoder.Availability;
+
+    /// <summary>设备视频能力说明。</summary>
+    public string VideoCapability => DeviceMediaPolicy.DescribeVideoCapability(_device.Profile);
 
     // ---- 扫描 ----
 
@@ -92,7 +119,21 @@ public sealed class SyncEngine
 
                 var tags = await Task.Run(() => MediaTagReader.Read(file), cancellationToken)
                     .ConfigureAwait(false);
-                bag.Add(new HostMediaItem(file, tags with { SizeBytes = info.Length }));
+                var item = new HostMediaItem(file, tags with { SizeBytes = info.Length });
+
+                // 只对「可能是视频」或「容器不是设备原生格式」的文件做精确探测，
+                // 避免对成千上万个普通 MP3 逐个调用 ffprobe。
+                if (_transcoder.IsAvailable && DeviceMediaPolicy.ShouldProbe(file, item.Tags))
+                {
+                    var probe = await _transcoder.ProbeAsync(file, cancellationToken).ConfigureAwait(false);
+                    item = item with
+                    {
+                        Probe = probe,
+                        Conversion = DeviceMediaPolicy.Decide(file, item.Tags, probe),
+                    };
+                }
+
+                bag.Add(item);
 
                 var done = Interlocked.Increment(ref index);
                 if (done % 25 == 0 || done == files.Count)
@@ -128,6 +169,21 @@ public sealed class SyncEngine
     }
 
     // ---- 计划 ----
+
+    /// <summary>生成宿主条目的界面说明，必要时附带转码提示。</summary>
+    private static string DescribeHost(HostMediaItem item)
+    {
+        var basic = $"{item.Tags.Artist} · {item.Tags.Album}";
+        if (item.Probe is { Success: true } probe && probe.Video is { } video)
+        {
+            basic = $"{basic} · {video.Width}×{video.Height} {video.CodecName}" +
+                    (probe.Duration.TotalSeconds > 0 ? $" · {probe.Duration:hh\\:mm\\:ss}" : string.Empty);
+        }
+
+        return item.Conversion is { RequiresWork: true } decision
+            ? $"{basic} ｜ 需要转码：{decision.Reason}"
+            : basic;
+    }
 
     /// <summary>建立同步计划。</summary>
     public SyncPlan BuildPlan(IReadOnlyList<HostMediaItem> hostItems)
@@ -178,7 +234,7 @@ public sealed class SyncEngine
                     item,
                     null,
                     item.Tags.EffectiveTitle(item.HostPath),
-                    $"{item.Tags.Artist} · {item.Tags.Album}"));
+                    DescribeHost(item)));
                 continue;
             }
 
@@ -273,6 +329,13 @@ public sealed class SyncEngine
         var removed = 0;
         long bytesCopied = 0;
 
+        // 可选：在同步前把 Rockbox 系统文件装到设备上（只装系统文件，可逆）。
+        var rockboxNote = await TryAutoInstallRockboxAsync(progress, cancellationToken).ConfigureAwait(false);
+        if (rockboxNote is not null)
+        {
+            failures.Add(rockboxNote);
+        }
+
         var transaction = _device.Session.BeginTransaction();
         var artworkWriter = new ArtworkWriter(_device, library);
         await using (transaction.ConfigureAwait(false))
@@ -292,13 +355,29 @@ public sealed class SyncEngine
                         {
                             var item = change.Host!;
                             var target = AllocateDevicePath(item);
-                            await transaction.StageFromFileAsync(target, item.HostPath, cancellationToken)
+
+                            var prepared = await PrepareMediaAsync(item, progress, cancellationToken)
                                 .ConfigureAwait(false);
+                            if (prepared is null)
+                            {
+                                failures.Add($"{change.Title}：{change.ConversionNote}");
+                                break;
+                            }
+
+                            try
+                            {
+                                await transaction.StageFromFileAsync(target, prepared, cancellationToken)
+                                    .ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                CleanUpPrepared(prepared, item.HostPath);
+                            }
 
                             var track = library.Database.AddTrack();
                             ApplyTags(track, item);
                             track.Location = target.Relative.Replace('/', ':');
-                            track.SizeBytes = (uint)Math.Min(item.Tags.SizeBytes, uint.MaxValue);
+                            track.SizeBytes = (uint)Math.Min(new FileInfo(item.HostPath).Length, uint.MaxValue);
                             track.LastModified = UnixSeconds(File.GetLastWriteTimeUtc(item.HostPath));
                             track.DateAdded = IpodNow();
                             track.DbTrackId = library.Database.PersistentIdFor(track.TrackId);
@@ -311,7 +390,8 @@ public sealed class SyncEngine
                             }
 
                             helper[item.HostPath] = new SyncHelperEntry(
-                                item.HostPath, item.Tags.SizeBytes, File.GetLastWriteTimeUtc(item.HostPath),
+                                item.HostPath, new FileInfo(item.HostPath).Length,
+                                File.GetLastWriteTimeUtc(item.HostPath),
                                 track.TrackId, target.Relative);
 
                             added++;
@@ -330,10 +410,26 @@ public sealed class SyncEngine
                                 break;
                             }
 
-                            await transaction.StageFromFileAsync(target, item.HostPath, cancellationToken)
+                            var prepared = await PrepareMediaAsync(item, progress, cancellationToken)
                                 .ConfigureAwait(false);
+                            if (prepared is null)
+                            {
+                                failures.Add($"{change.Title}：{change.ConversionNote}");
+                                break;
+                            }
+
+                            try
+                            {
+                                await transaction.StageFromFileAsync(target, prepared, cancellationToken)
+                                    .ConfigureAwait(false);
+                            }
+                            finally
+                            {
+                                CleanUpPrepared(prepared, item.HostPath);
+                            }
+
                             ApplyTags(track, item);
-                            track.SizeBytes = (uint)Math.Min(item.Tags.SizeBytes, uint.MaxValue);
+                            track.SizeBytes = (uint)Math.Min(new FileInfo(item.HostPath).Length, uint.MaxValue);
                             track.LastModified = UnixSeconds(File.GetLastWriteTimeUtc(item.HostPath));
 
                             var artworkId = artworkWriter.AttachCover(transaction, track, item.Tags.CoverImage);
@@ -344,7 +440,8 @@ public sealed class SyncEngine
                             }
 
                             helper[item.HostPath] = new SyncHelperEntry(
-                                item.HostPath, item.Tags.SizeBytes, File.GetLastWriteTimeUtc(item.HostPath),
+                                item.HostPath, new FileInfo(item.HostPath).Length,
+                                File.GetLastWriteTimeUtc(item.HostPath),
                                 track.TrackId, relative);
 
                             replaced++;
@@ -406,8 +503,17 @@ public sealed class SyncEngine
                 var result = await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
                 AppLog.Info("同步", $"同步提交完成：写入 {result.Written} 个文件。");
 
+                // 提交成功后，按用户设置把审核过的元数据写回宿主源文件。
+                var tagNotes = await WriteBackTagsAsync(changes, cancellationToken).ConfigureAwait(false);
+                failures.AddRange(tagNotes);
+
                 var message =
                     $"同步完成：新增 {added} 项，替换 {replaced} 项，更新信息 {metadataUpdated} 项，移除 {removed} 项。";
+                if (tagNotes.Count > 0 && _settings.WriteTagsToSourceFiles)
+                {
+                    message += $"（标签写回有 {tagNotes.Count} 条提示）";
+                }
+
                 progress?.Report(new SyncProgress("同步完成", changes.Length, changes.Length, string.Empty));
                 return new SyncOutcome(true, message, added, replaced, metadataUpdated, removed, bytesCopied, failures);
             }
@@ -419,6 +525,179 @@ public sealed class SyncEngine
             }
         }
     }
+
+    /// <summary>
+    /// 同步开始时按设置自动安装 Rockbox 的系统文件（可逆，不触碰固件）。
+    /// 只在设备上还没有 Rockbox、且机型受支持时执行；返回给用户的一行说明。
+    /// </summary>
+    private async Task<string?> TryAutoInstallRockboxAsync(
+        IProgress<SyncProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        if (!_settings.AutoInstallRockboxOnSync)
+        {
+            return null;
+        }
+
+        var target = RockboxTargets.Resolve(_device.Profile);
+        if (target is null || !target.Supported)
+        {
+            return null;
+        }
+
+        try
+        {
+            var installer = new RockboxInstaller(
+                Path.Combine(_settings.EffectiveWorkDirectory, "rockbox"));
+
+            var status = await installer.InspectAsync(_device.MountPoint, cancellationToken).ConfigureAwait(false);
+            if (status.SystemInstalled)
+            {
+                return null;
+            }
+
+            progress?.Report(new SyncProgress("正在安装 Rockbox 系统文件", 0, 0, target.Name));
+            AppLog.Info("Rockbox", $"按设置自动安装 Rockbox 系统文件（目标 {target.Name}）。");
+
+            var options = new RockboxOptions
+            {
+                MirrorBaseUrl = _settings.RockboxMirrorUrl,
+                Channel = _settings.RockboxChannel,
+                ReleaseVersion = _settings.RockboxReleaseVersion,
+                Mode = RockboxInstallMode.SystemOnly,
+                BackupExistingInstallation = true,
+                BackupFirmwarePartition = false,
+                BackupAppleFirmware = false,
+                KeepAppleFirmwareDualBoot = _settings.RockboxKeepAppleFirmware,
+            };
+
+            var result = await installer.RunAsync(_device.MountPoint, target, options, null, cancellationToken)
+                .ConfigureAwait(false);
+
+            return result.Success
+                ? $"已自动在设备上安装 Rockbox 系统文件（目标 {target.Name}）。"
+                : $"自动安装 Rockbox 失败：{result.Message}";
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            AppLog.Error("Rockbox", "自动安装失败", error);
+            return $"自动安装 Rockbox 时出错：{error.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 把设备上刚刚提交的元数据写回宿主源文件。
+    ///
+    /// 这是可选功能（设置中的「标签写回源文件」）。写入按源文件格式支持多少字段就写多少，
+    /// 无法表达的字段由 <see cref="MediaTagWriter"/> 在结果里列出。任何失败都只记入提示，
+    /// 绝不影响已经提交的同步结果。
+    /// </summary>
+    private async Task<List<string>> WriteBackTagsAsync(
+        IReadOnlyList<SyncChange> changes,
+        CancellationToken cancellationToken)
+    {
+        var notes = new List<string>();
+
+        if (!_settings.WriteTagsToSourceFiles)
+        {
+            return notes;
+        }
+
+        var targets = changes
+            .Where(change => change.Host is not null && change.Track is not null &&
+                             change.Kind is SyncChangeKind.Add or SyncChangeKind.Replace or SyncChangeKind.UpdateMetadata)
+            .ToArray();
+
+        if (targets.Length == 0)
+        {
+            return notes;
+        }
+
+        AppLog.Info("标签写回", $"开始把 {targets.Length} 个文件的元数据写回源文件。");
+
+        foreach (var change in targets)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var item = change.Host!;
+            var track = change.Track!;
+
+            if (!File.Exists(item.HostPath))
+            {
+                notes.Add($"{Path.GetFileName(item.HostPath)}：源文件已不存在，跳过写回。");
+                continue;
+            }
+
+            try
+            {
+                var request = BuildTagWriteRequest(track, item);
+                var outcome = await MediaTagWriter.WriteAsync(
+                    item.HostPath, request, _settings.TagWriteCreateBackup, cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (!outcome.Success)
+                {
+                    notes.Add($"{Path.GetFileName(item.HostPath)}：写回失败 —— {outcome.Message}");
+                    continue;
+                }
+
+                if (!outcome.Changed)
+                {
+                    continue;
+                }
+
+                AppLog.Info("标签写回",
+                    $"{Path.GetFileName(item.HostPath)}：写入 {outcome.WrittenFields.Count} 个字段" +
+                    (outcome.UnsupportedFields.Count > 0
+                        ? $"，{outcome.UnsupportedFields.Count} 个字段该格式不支持"
+                        : string.Empty) + "。");
+
+                if (outcome.UnsupportedFields.Count > 0)
+                {
+                    notes.Add($"{Path.GetFileName(item.HostPath)}：该格式不支持 " +
+                              string.Join('、', outcome.UnsupportedFields) + "。");
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception error)
+            {
+                AppLog.Error("标签写回", $"写回失败：{item.HostPath}", error);
+                notes.Add($"{Path.GetFileName(item.HostPath)}：写回异常 —— {error.Message}");
+            }
+        }
+
+        return notes;
+    }
+
+    /// <summary>把设备曲目的最终元数据转换成本地文件标签写入请求。</summary>
+    private static TagWriteRequest BuildTagWriteRequest(TrackRecord track, HostMediaItem item) => new()
+    {
+        Title = track.Title,
+        Artist = track.Artist,
+        AlbumArtist = track.AlbumArtist,
+        Album = track.Album,
+        Genre = track.Genre,
+        Composer = track.Composer,
+        Comment = track.Comment,
+        Grouping = track.Grouping,
+        Lyrics = track.Lyrics.Length > 0 ? track.Lyrics : null,
+        TrackNumber = track.TrackNumber > 0 ? track.TrackNumber : null,
+        TotalTracks = track.TotalTracks > 0 ? track.TotalTracks : null,
+        DiscNumber = track.DiscNumber > 0 ? track.DiscNumber : null,
+        TotalDiscs = track.TotalDiscs > 0 ? track.TotalDiscs : null,
+        Year = track.Year > 0 ? track.Year : null,
+        Bpm = track.Bpm > 0 ? track.Bpm : null,
+        IsCompilation = track.IsCompilation,
+        CoverImage = item.Tags.CoverImage,
+        CoverMimeType = item.Tags.CoverMimeType,
+    };
 
     private async Task StageDatabaseAsync(
         LibrarySession library,
@@ -480,6 +759,69 @@ public sealed class SyncEngine
     }
 
     // ---- 工具 ----
+
+    /// <summary>
+    /// 准备要写入设备的媒体文件：需要转码时先转码，返回临时文件路径；
+    /// 不需要转码时直接返回原路径；失败时返回 <c>null</c>。
+    /// </summary>
+    private async Task<string?> PrepareMediaAsync(
+        HostMediaItem item,
+        IProgress<SyncProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        if (!item.NeedsConversion || item.Conversion is null)
+        {
+            return item.HostPath;
+        }
+
+        var decision = item.Conversion;
+        var report = new Progress<TranscodeProgress>(value =>
+            progress?.Report(new SyncProgress("正在转码", 0, 0, value.Display)));
+
+        try
+        {
+            var result = await _transcoder.ConvertAsync(
+                item.HostPath, decision, _transcodeOptions, _device.Profile, report, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (!result.Success || result.OutputPath is null)
+            {
+                AppLog.Warning("同步", $"转码失败，已跳过：{item.HostPath}（{result.Message}）");
+                return null;
+            }
+
+            return result.OutputPath;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            AppLog.Error("同步", $"转码异常，已跳过：{item.HostPath}", error);
+            return null;
+        }
+    }
+
+    private static void CleanUpPrepared(string prepared, string original)
+    {
+        if (string.Equals(prepared, original, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(prepared))
+            {
+                File.Delete(prepared);
+            }
+        }
+        catch (Exception)
+        {
+            // 临时文件清理失败不影响同步结果。
+        }
+    }
 
     private static void ApplyTags(TrackRecord track, HostMediaItem item)
     {

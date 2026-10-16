@@ -62,7 +62,8 @@
                     </Button>
                 </StackPanel>
                 <ProgressBar x:Name="ScanProgress" Minimum="0" Maximum="1" Value="0" Visibility="Collapsed" />
-                <TextBlock x:Name="ScanStatus" Style="{StaticResource MutedTextStyle}" />
+                <TextBlock x:Name="ToolStatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="ScanStatus" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
             </StackPanel>
         </Border>
 

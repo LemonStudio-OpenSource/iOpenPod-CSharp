@@ -74,6 +74,61 @@ public sealed class AppSettings
     /// <summary>同步时音频转码的目标码率（kbps）。</summary>
     public int TranscodeBitrateKbps { get; set; } = 256;
 
+    /// <summary>ffmpeg / ffprobe 所在目录；留空自动查找。</summary>
+    public string FfmpegDirectory { get; set; } = string.Empty;
+
+    /// <summary>设备不支持时是否自动重新编码音频。</summary>
+    public bool EnableAudioConversion { get; set; } = true;
+
+    /// <summary>设备不支持时是否自动重新编码视频。</summary>
+    public bool EnableVideoConversion { get; set; } = true;
+
+    /// <summary>视频转码目标码率（kbps）。</summary>
+    public int VideoBitrateKbps { get; set; } = 1500;
+
+    /// <summary>视频转码目标最大宽度。</summary>
+    public int VideoMaxWidth { get; set; } = 640;
+
+    /// <summary>视频转码目标最大高度。</summary>
+    public int VideoMaxHeight { get; set; } = 480;
+
+    /// <summary>是否把设备上的元数据写回宿主源文件。</summary>
+    public bool WriteTagsToSourceFiles { get; set; }
+
+    /// <summary>写回源文件时是否先创建 <c>.iopenpod.bak</c> 备份。</summary>
+    public bool TagWriteCreateBackup { get; set; } = true;
+
+    /// <summary>Rockbox 镜像站根地址；留空使用官方地址。</summary>
+    public string RockboxMirrorUrl { get; set; } = string.Empty;
+
+    /// <summary>Rockbox 版本通道：<c>release</c> 或 <c>daily</c>。</summary>
+    public string RockboxChannel { get; set; } = "release";
+
+    /// <summary>Rockbox 稳定版版本号。</summary>
+    public string RockboxReleaseVersion { get; set; } = "4.0";
+
+    /// <summary>同步时自动尝试安装 Rockbox（仅当设备上还没有 Rockbox 时）。</summary>
+    public bool AutoInstallRockboxOnSync { get; set; }
+
+    /// <summary>安装 Rockbox 前是否备份固件分区与 Apple 固件。</summary>
+    public bool RockboxBackupBeforeInstall { get; set; } = true;
+
+    /// <summary>是否把 Apple 固件放入 .rockbox 以便双启动。</summary>
+    public bool RockboxKeepAppleFirmware { get; set; } = true;
+
+    /// <summary>安装 Rockbox 时是否顺带安装引导程序。</summary>
+    public bool RockboxInstallBootloader { get; set; } = true;
+
+    /// <summary>自定义 ipodpatcher 参数。</summary>
+    public string RockboxExtraArguments { get; set; } = string.Empty;
+
+    /// <summary>媒体工具的临时工作目录。</summary>
+    [JsonIgnore]
+    public string EffectiveWorkDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "iOpenPod",
+        "work");
+
     /// <summary>备份快照的保留数量。</summary>
     public int BackupRetention { get; set; } = 10;
 

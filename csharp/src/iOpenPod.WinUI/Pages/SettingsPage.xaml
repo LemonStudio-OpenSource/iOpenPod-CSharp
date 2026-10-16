@@ -33,8 +33,68 @@
                               SelectionChanged="OnTranscodeChanged" />
                     <NumberBox x:Name="BitrateBox" Header="转码目标码率（kbps）" Width="220" Minimum="64" Maximum="320"
                                SpinButtonPlacementMode="Compact" ValueChanged="OnBitrateChanged" />
-                    <TextBlock Style="{StaticResource MutedTextStyle}"
-                               Text="说明：本版本默认“保持原格式”，不会重新编码媒体文件；设备原生不支持的格式会给出提示。" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="媒体工具与转码" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,0" />
+                    <TextBlock x:Name="FfmpegStatusText" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="FfmpegPathBox" Grid.Column="0" Header="ffmpeg / ffprobe 所在目录"
+                                 PlaceholderText="留空则自动在系统 PATH 中查找" />
+                        <Button Grid.Column="1" Content="浏览…" Click="OnBrowseFfmpeg" VerticalAlignment="Bottom" />
+                        <Button Grid.Column="2" Content="重新检测" Click="OnRedetectFfmpeg" VerticalAlignment="Bottom" />
+                    </Grid>
+                    <ToggleSwitch x:Name="AudioConversionSwitch" Header="设备不支持时自动重新编码音频"
+                                  OnContent="启用" OffContent="停用" Toggled="OnAudioConversionToggled" />
+                    <ToggleSwitch x:Name="VideoConversionSwitch" Header="设备不支持时自动重新编码视频"
+                                  OnContent="启用" OffContent="停用" Toggled="OnVideoConversionToggled" />
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <NumberBox x:Name="VideoBitrateBox" Grid.Column="0" Header="视频码率（kbps）" Width="180"
+                                   Minimum="200" Maximum="8000" SpinButtonPlacementMode="Compact"
+                                   ValueChanged="OnVideoBitrateChanged" />
+                        <NumberBox x:Name="VideoWidthBox" Grid.Column="1" Header="最大宽度" Width="140"
+                                   Minimum="160" Maximum="1920" SpinButtonPlacementMode="Compact"
+                                   ValueChanged="OnVideoSizeChanged" />
+                        <NumberBox x:Name="VideoHeightBox" Grid.Column="2" Header="最大高度" Width="140"
+                                   Minimum="120" Maximum="1080" SpinButtonPlacementMode="Compact"
+                                   ValueChanged="OnVideoSizeChanged" />
+                    </Grid>
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Text="说明：转码需要系统上安装 FFmpeg（ffmpeg 与 ffprobe）。程序不会自行下载 FFmpeg。" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="标签写回源文件" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,0" />
+                    <ToggleSwitch x:Name="TagWriteSwitch" Header="同步后把元数据写回电脑上的源文件"
+                                  OnContent="启用" OffContent="停用" Toggled="OnTagWriteToggled" />
+                    <ToggleSwitch x:Name="TagBackupSwitch" Header="写回前创建 .iopenpod.bak 备份"
+                                  OnContent="启用" OffContent="停用" Toggled="OnTagBackupToggled" />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Text="说明：按源文件格式支持多少字段就写多少 —— ID3v2 支持标题/艺术家/专辑/流派/作曲者/备注/歌词/音轨号/碟号/年份/BPM/合辑/封面；FLAC 与 Ogg 支持 Vorbis 注释的全部字段；MP4 支持 iTunes 风格字段；WAV/AIFF 支持 INFO/NAME/AUTH/ANNO。无法表达的字段会在结果中列出。" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource CardBorderStyle}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Rockbox" Style="{StaticResource SectionHeaderStyle}" Margin="0,0,0,0" />
+                    <ToggleSwitch x:Name="AutoRockboxSwitch" Header="同步时自动尝试安装 Rockbox"
+                                  OnContent="启用" OffContent="停用" Toggled="OnAutoRockboxToggled" />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Text="说明：只在设备上还没有 Rockbox 时执行，且默认只安装系统文件（可逆）。引导程序安装请到左侧“Rockbox”页面手动进行。" />
                 </StackPanel>
             </Border>
 
